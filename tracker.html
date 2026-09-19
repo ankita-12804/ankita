@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Expense Tracker</title>
+    <meta name="description"
+        content="Modern student expense dashboard for tracking spending, budgeting, and savings goals." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwUEQp3Q6O7I9bRz7R0jB2KQvO5j0S8oQdG8w==" crossorigin="anonymous"
+        referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand" aria-label="Student Expense Tracker brand">
+                <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <span class="brand-text">Student Expense Tracker</span>
+            </div>
+
+            <nav class="topnav" aria-label="Main navigation">
+                <button class="nav-link active" data-target="tracking-section" type="button">Track</button>
+                <button class="nav-link" data-target="budget-planner" type="button">Plan</button>
+                <button class="nav-link" data-target="savings-section" type="button">Save</button>
+            </nav>
+
+            <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle dark mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </header>
+
+        <main class="dashboard">
+            <section class="summary-grid" aria-label="Expense summary cards">
+                <article class="stat-card card accent-blue">
+                    <div class="stat-header">
+                        <span class="icon-wrap blue"><i class="fa-solid fa-wallet"></i></span>
+                        <span class="stat-meta">Total Expenses</span>
+                    </div>
+                    <h3 id="totalExpensesValue">₹0</h3>
+                </article>
+
+                <article class="stat-card card accent-purple">
+                    <div class="stat-header">
+                        <span class="icon-wrap purple"><i class="fa-solid fa-calendar-check"></i></span>
+                        <span class="stat-meta">This Month</span>
+                    </div>
+                    <h3 id="monthlyExpensesValue">₹0</h3>
+                </article>
+
+                <article class="stat-card card accent-green">
+                    <div class="stat-header">
+                        <span class="icon-wrap green"><i class="fa-solid fa-receipt"></i></span>
+                        <span class="stat-meta">Total Transactions</span>
+                    </div>
+                    <h3 id="transactionCountValue">0</h3>
+                </article>
+
+                <article class="stat-card card accent-red">
+                    <div class="stat-header">
+                        <span class="icon-wrap red"><i class="fa-solid fa-piggy-bank"></i></span>
+                        <span class="stat-meta">Remaining Balance</span>
+                    </div>
+                    <h3 id="remainingBalanceValue">₹0</h3>
+                </article>
+            </section>
+
+            <section class="content-grid">
+                <div class="left-column">
+                    <section id="tracking-section" class="panel form-panel">
+                        <div class="panel-header">
+                            <h2><i class="fa-solid fa-circle-plus"></i> Add New Expense</h2>
+                        </div>
+
+                        <form id="expenseForm" novalidate>
+                            <div class="field-grid">
+                                <div class="input-group">
+                                    <label for="expenseName">Expense Name</label>
+                                    <input id="expenseName" name="expenseName" type="text"
+                                        placeholder="Enter expense name" />
+                                    <small class="error-text" id="expenseNameError"></small>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="expenseAmount">Amount (₹)</label>
+                                    <input id="expenseAmount" name="expenseAmount" type="number" min="1" step="0.01"
+                                        placeholder="0.00" />
+                                    <small class="error-text" id="expenseAmountError"></small>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="expenseCategory">Category</label>
+                                    <select id="expenseCategory" name="expenseCategory">
+                                        <option value="">Select category</option>
+                                        <option value="Food">Food</option>
+                                        <option value="Travel">Travel</option>
+                                        <option value="Education">Education</option>
+                                        <option value="Shopping">Shopping</option>
+                                        <option value="Entertainment">Entertainment</option>
+                                        <option value="Bills">Bills</option>
+                                        <option value="Others">Others</option>
+                                    </select>
+                                    <small class="error-text" id="expenseCategoryError"></small>
+                                </div>
+
+                                <div class="input-group">
+                                    <label for="expenseDate">Date</label>
+                                    <input id="expenseDate" name="expenseDate" type="date" />
+                                    <small class="error-text" id="expenseDateError"></small>
+                                </div>
+                            </div>
+
+                            <button class="primary-btn" type="submit">Add Expense</button>
+                        </form>
+                    </section>
+
+                    <section class="panel chart-panel">
+                        <div class="panel-header">
+                            <h2><i class="fa-solid fa-chart-pie"></i> Expense Breakdown</h2>
+                        </div>
+                        <div class="chart-wrap">
+                            <canvas id="expenseChart" aria-label="Expense breakdown chart"></canvas>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="right-column">
+                    <section class="panel monthly-panel">
+                        <div class="panel-header">
+                            <h2><i class="fa-solid fa-chart-column"></i> Monthly Analysis</h2>
+                        </div>
+
+                        <div class="monthly-grid">
+                            <div class="mini-stat">
+                                <span>Current month spending</span>
+                                <strong id="currentMonthSpending">₹0</strong>
+                            </div>
+                            <div class="mini-stat">
+                                <span>Average daily spending</span>
+                                <strong id="averageDailySpending">₹0</strong>
+                            </div>
+                            <div class="mini-stat">
+                                <span>Highest spending category</span>
+                                <strong id="highestCategory">--</strong>
+                            </div>
+                            <div class="mini-stat">
+                                <span>Transactions</span>
+                                <strong id="monthlyTransactions">0</strong>
+                            </div>
+                        </div>
+
+                        <div class="monthly-chart-wrap">
+                            <canvas id="monthlyChart" aria-label="Monthly spending chart"></canvas>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="panel expense-table-panel">
+                <div class="panel-header table-header">
+                    <h2><i class="fa-solid fa-list"></i> Expense List</h2>
+                    <div class="table-actions-inline">
+                        <button id="exportCsvBtn" class="secondary-btn small-btn" type="button">
+                            <i class="fa-solid fa-file-csv"></i> Export CSV
+                        </button>
+                        <button id="clearAllBtn" class="danger-btn small-btn" type="button">
+                            <i class="fa-solid fa-trash"></i> Clear All Expenses
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-card">
+                    <div class="filter-wrapper">
+                        <div class="input-group compact-group">
+                            <label for="searchInput">Search</label>
+                            <input id="searchInput" type="search" placeholder="Search expense name" />
+                        </div>
+
+                        <div class="input-group compact-group">
+                            <label for="filterCategory">Category</label>
+                            <select id="filterCategory">
+                                <option value="all">All Categories</option>
+                                <option value="Food">Food</option>
+                                <option value="Travel">Travel</option>
+                                <option value="Education">Education</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Bills">Bills</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group compact-group">
+                            <label for="filterFromDate">From Date</label>
+                            <input id="filterFromDate" type="date" />
+                        </div>
+
+                        <div class="input-group compact-group">
+                            <label for="filterToDate">To Date</label>
+                            <input id="filterToDate" type="date" />
+                        </div>
+                    </div>
+
+                    <div class="filter-actions">
+                        <button id="applyFilterBtn" class="primary-btn small-btn" type="button">Apply Filter</button>
+                        <button id="clearFilterBtn" class="secondary-btn small-btn" type="button">Clear Filter</button>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Expense Name</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseTableBody"></tbody>
+                    </table>
+
+                    <div id="emptyState" class="empty-state hidden">
+                        <i class="fa-solid fa-box-open"></i>
+                        <p>No expenses available. Add your first expense to get started.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="budget-planner" class="panel planner-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-sack-dollar"></i> Budget Planner</h2>
+                </div>
+
+                <div class="planner-grid">
+                    <div class="budget-input-wrap">
+                        <label for="budgetInput">Monthly Budget</label>
+                        <div class="budget-field">
+                            <span>₹</span>
+                            <input id="budgetInput" type="number" min="0" step="100" placeholder="20000" />
+                        </div>
+                        <button id="saveBudgetBtn" class="primary-btn small-btn" type="button">Update Budget</button>
+                    </div>
+
+                    <div class="budget-overview">
+                        <div class="budget-metric">
+                            <span>Total Spent</span>
+                            <strong id="plannerTotalSpent">₹0</strong>
+                        </div>
+                        <div class="budget-metric">
+                            <span>Remaining</span>
+                            <strong id="plannerRemaining">₹0</strong>
+                        </div>
+                        <div class="budget-metric">
+                            <span>Budget Used</span>
+                            <strong id="plannerPercentage">0%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-labels">
+                        <span>Budget Progress</span>
+                        <span id="progressHint">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="budgetProgressBar" class="progress-fill"></div>
+                    </div>
+                </div>
+
+                <div id="budgetWarning" class="warning-box hidden"></div>
+            </section>
+
+            <section id="savings-section" class="panel savings-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-piggy-bank"></i> Savings</h2>
+                </div>
+
+                <div class="savings-grid">
+                    <div class="savings-metrics">
+                        <div class="metric-row">
+                            <span>Monthly Budget</span>
+                            <strong id="savingsBudgetValue">₹0</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Total Expenses</span>
+                            <strong id="savingsExpenseValue">₹0</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Remaining Balance</span>
+                            <strong id="savingsRemainingValue">₹0</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Suggested Savings</span>
+                            <strong id="suggestedSavingsValue">₹0</strong>
+                        </div>
+                        <div class="metric-row">
+                            <span>Savings Percentage</span>
+                            <strong id="savingsPercentageValue">0%</strong>
+                        </div>
+                    </div>
+
+                    <div class="goal-box">
+                        <label for="savingsGoalInput">Savings Goal</label>
+                        <div class="budget-field">
+                            <span>₹</span>
+                            <input id="savingsGoalInput" type="number" min="0" step="100" placeholder="50000" />
+                        </div>
+                        <button id="saveSavingsGoalBtn" class="primary-btn small-btn" type="button">Save Goal</button>
+
+                        <div class="goal-summary">
+                            <div class="goal-row">
+                                <span>Goal Amount</span>
+                                <strong id="goalAmountValue">₹0</strong>
+                            </div>
+                            <div class="goal-row">
+                                <span>Current Saved</span>
+                                <strong id="currentSavedValue">₹0</strong>
+                            </div>
+                            <div class="goal-row">
+                                <span>Remaining Goal</span>
+                                <strong id="remainingGoalValue">₹0</strong>
+                            </div>
+                        </div>
+
+                        <div class="progress-section compact-progress">
+                            <div class="progress-labels">
+                                <span>Goal Progress</span>
+                                <span id="goalProgressText">0%</span>
+                            </div>
+                            <div class="progress-bar goal-bar">
+                                <div id="goalProgressBar" class="progress-fill goal-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
