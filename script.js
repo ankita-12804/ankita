@@ -5,21 +5,11 @@ const STORAGE_KEYS = {
     theme: 'studentExpenseTrackerTheme',
 };
 
-const defaultExpenses = [
-    { id: 1, name: 'Mess Food', amount: 150, category: 'Food', date: '2025-09-01' },
-    { id: 2, name: 'Bus Ticket', amount: 50, category: 'Travel', date: '2025-09-02' },
-    { id: 3, name: 'Notebook', amount: 300, category: 'Education', date: '2025-09-03' },
-    { id: 4, name: 'Pencil & Stationery', amount: 200, category: 'Education', date: '2025-09-04' },
-    { id: 5, name: 'Shopping', amount: 1200, category: 'Shopping', date: '2025-09-05' },
-    { id: 6, name: 'Movie', amount: 600, category: 'Entertainment', date: '2025-09-06' },
-    { id: 7, name: 'Snacks', amount: 250, category: 'Food', date: '2025-09-07' },
-];
-
 const state = {
     expenses: [],
     filteredExpenses: [],
-    budget: 20000,
-    savingsGoal: 50000,
+    budget: 0,
+    savingsGoal: 0,
     theme: 'light',
     chart: null,
     monthlyChart: null,
@@ -91,22 +81,30 @@ function bindEvents() {
 }
 
 function loadFromLocalStorage() {
-    const savedExpenses = JSON.parse(localStorage.getItem(STORAGE_KEYS.expenses) || 'null');
+    let savedExpenses = null;
+
+    try {
+        savedExpenses = JSON.parse(localStorage.getItem(STORAGE_KEYS.expenses) || 'null');
+    } catch (error) {
+        savedExpenses = null;
+    }
+
     const savedBudget = Number(localStorage.getItem(STORAGE_KEYS.budget));
     const savedSavingsGoal = Number(localStorage.getItem(STORAGE_KEYS.savingsGoal));
     const savedTheme = localStorage.getItem(STORAGE_KEYS.theme);
 
-    if (Array.isArray(savedExpenses) && savedExpenses.length > 0) {
+    if (Array.isArray(savedExpenses)) {
         state.expenses = savedExpenses.map((item) => ({
             ...item,
             amount: Number(item.amount),
         }));
     } else {
-        state.expenses = structuredClone(defaultExpenses);
+        state.expenses = [];
+        localStorage.setItem(STORAGE_KEYS.expenses, JSON.stringify(state.expenses));
     }
 
-    state.budget = Number.isFinite(savedBudget) && savedBudget > 0 ? savedBudget : 20000;
-    state.savingsGoal = Number.isFinite(savedSavingsGoal) && savedSavingsGoal > 0 ? savedSavingsGoal : 50000;
+    state.budget = Number.isFinite(savedBudget) && savedBudget >= 0 ? savedBudget : 0;
+    state.savingsGoal = Number.isFinite(savedSavingsGoal) && savedSavingsGoal >= 0 ? savedSavingsGoal : 0;
     state.theme = savedTheme === 'dark' ? 'dark' : 'light';
     state.filteredExpenses = [...state.expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
 }
@@ -481,7 +479,7 @@ function updateSavings() {
 
 function formatCurrency(value) {
     const amount = Number(value) || 0;
-    return currencyFormatter.format(amount);
+    return amount === 0 ? '₹0' : currencyFormatter.format(amount);
 }
 
 function formatDate(dateString) {
